@@ -77,7 +77,17 @@ function calculate(capital, totalMonthly, annualRate, durationMonths) {
  * @param {HTMLCanvasElement} canvas
  * @param {Array<{value: number, color: string, label: string}>} segments
  */
+function getThemeColors() {
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    holeFill:    dark ? '#1E293B' : 'white',
+    textColor:   dark ? '#E5E7EB' : '#374151',
+    subtextColor: '#9CA3AF',
+  };
+}
+
 function drawDonut(canvas, segments) {
+  const { holeFill, textColor, subtextColor } = getThemeColors();
   const ctx    = canvas.getContext('2d');
   const size   = canvas.width;
   const cx     = size / 2;
@@ -88,38 +98,88 @@ function drawDonut(canvas, segments) {
 
   ctx.clearRect(0, 0, size, size);
 
-  let startAngle = -Math.PI / 2; // start at top
+  let startAngle = -Math.PI / 2;
 
   segments.forEach((seg) => {
     const slice = (seg.value / total) * 2 * Math.PI;
-
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
     ctx.closePath();
     ctx.fillStyle = seg.color;
     ctx.fill();
-
     startAngle += slice;
   });
 
-  // Cut inner circle (donut hole)
+  // Donut hole
   ctx.beginPath();
   ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
-  ctx.fillStyle = 'white';
+  ctx.fillStyle = holeFill;
   ctx.fill();
 
   // Center label
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#374151';
+  ctx.fillStyle = textColor;
   ctx.font = `700 ${Math.round(size * 0.11)}px Inter, system-ui, sans-serif`;
   ctx.fillText(segments[1]
     ? ((segments[1].value / total) * 100).toFixed(1) + '%'
     : '', cx, cy - 6);
   ctx.font = `500 ${Math.round(size * 0.078)}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = '#9CA3AF';
+  ctx.fillStyle = subtextColor;
   ctx.fillText('assurance', cx, cy + size * 0.085);
+}
+
+// ─── Amortization table ───────────────────────────────────────────────────────
+
+let lastAmortRows = [];
+
+function buildAmortizationRows(capital, r, n, monthlyNoInsurance, insuranceMonthly) {
+  const rows = [];
+  let remaining = capital;
+  for (let i = 1; i <= n; i++) {
+    const interest  = r === 0 ? 0 : remaining * r;
+    const principal = monthlyNoInsurance - interest;
+    const total     = monthlyNoInsurance + insuranceMonthly;
+    remaining       = Math.max(0, remaining - principal);
+    rows.push({ month: i, principal, interest, insurance: insuranceMonthly, total, remaining });
+  }
+  return rows;
+}
+
+function renderAmortizationTable(rows) {
+  lastAmortRows = rows;
+  const tbody  = document.getElementById('amortTbody');
+  const toggle = document.getElementById('btnAmortToggle');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.month}</td>
+      <td>${fmtEur(r.principal)}</td>
+      <td>${fmtEur(r.interest)}</td>
+      <td>${fmtEur(r.insurance)}</td>
+      <td>${fmtEur(r.total)}</td>
+      <td>${fmtEur(r.remaining)}</td>
+    </tr>
+  `).join('');
+
+  tbody.classList.add('amort-collapsed');
+
+  if (rows.length > 24) {
+    toggle.hidden = false;
+    let expanded = false;
+    toggle.textContent = `Voir les ${rows.length - 24} mois restants ▾`;
+    toggle.onclick = () => {
+      expanded = !expanded;
+      tbody.classList.toggle('amort-collapsed', !expanded);
+      toggle.textContent = expanded
+        ? 'Réduire ▴'
+        : `Voir les ${rows.length - 24} mois restants ▾`;
+    };
+  } else {
+    toggle.hidden = true;
+  }
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -161,10 +221,11 @@ function setFieldError(fieldId, hasError) {
   group.classList.toggle('error', hasError);
 }
 
-// ─── Share state ──────────────────────────────────────────────────────────────
+// ─── Shared state ─────────────────────────────────────────────────────────────
 
 let lastShareText = null;
 let lastShareUrl  = null;
+let lastChartData = null; // { canvas, segments } — for dark mode redraw
 
 // ─── Duration toggle ──────────────────────────────────────────────────────────
 
@@ -276,6 +337,7 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   ];
 
   drawDonut(canvas, segments);
+  lastChartData = { canvas, segments };
 
   // Legend
   const legend = document.getElementById('chartLegend');
@@ -319,6 +381,12 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
     shareUrl,
   ].join('\n');
   lastShareUrl = shareUrl;
+
+  // ── Amortization table ──
+  const r = taux / 100 / 12;
+  renderAmortizationTable(
+    buildAmortizationRows(capital, r, durationMonths, res.monthlyWithoutInsurance, Math.max(0, res.insuranceMonthly))
+  );
 
   // ── Persist values ──
   saveToStorage();
@@ -389,6 +457,44 @@ document.getElementById('btnShare').addEventListener('click', async () => {
   // Déclencher le calcul automatiquement
   document.getElementById('calcForm').dispatchEvent(new Event('submit'));
 })();
+
+// ─── Print button ─────────────────────────────────────────────────────────────
+
+document.getElementById('btnPrint').addEventListener('click', () => {
+  // Expand amortization table before printing so all rows are visible
+  const tbody  = document.getElementById('amortTbody');
+  const toggle = document.getElementById('btnAmortToggle');
+  const wasCollapsed = tbody && tbody.classList.contains('amort-collapsed');
+  if (wasCollapsed) tbody.classList.remove('amort-collapsed');
+
+  window.print();
+
+  // Restore state after print dialog closes
+  if (wasCollapsed) tbody.classList.add('amort-collapsed');
+});
+
+// ─── CSV download ─────────────────────────────────────────────────────────────
+
+document.getElementById('btnCsvDownload').addEventListener('click', () => {
+  if (!lastAmortRows.length) return;
+  const header = 'Mois;Capital remboursé (€);Intérêts (€);Assurance (€);Mensualité totale (€);Capital restant dû (€)';
+  const lines  = lastAmortRows.map(r =>
+    [r.month, r.principal.toFixed(2), r.interest.toFixed(2),
+     r.insurance.toFixed(2), r.total.toFixed(2), r.remaining.toFixed(2)].join(';')
+  );
+  const csv  = '\uFEFF' + [header, ...lines].join('\n'); // BOM for Excel
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: 'amortissement-assurCalc.csv' });
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ─── Dark mode: redraw canvas on theme change ─────────────────────────────────
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (lastChartData) drawDonut(lastChartData.canvas, lastChartData.segments);
+});
 
 // ─── localStorage persistence ─────────────────────────────────────────────────
 

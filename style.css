@@ -437,6 +437,188 @@ body {
 .results-panel[hidden] { display: none; }
 .results-panel:not([hidden]) { animation: fadeSlideIn .3s ease both; }
 
+/* ─── Results actions (Partager + Exporter PDF) ─────────────────────────── */
+.results-actions {
+  display: flex;
+  gap: 10px;
+}
+.results-actions .btn-share { flex: 1; }
+.btn-print {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 18px;
+  background: var(--gray-700);
+  color: white;
+  font-family: var(--font);
+  font-size: .95rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn-print:hover  { opacity: .85; }
+.btn-print:active { transform: translateY(1px); }
+.btn-print:focus-visible { outline: 3px solid var(--gray-700); outline-offset: 3px; }
+
+/* ─── Amortization table ─────────────────────────────────────────────────── */
+.amort-card { padding-bottom: 20px; }
+.amort-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.amort-header .detail-title { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.btn-csv {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--gray-50);
+  color: var(--gray-700);
+  font-family: var(--font);
+  font-size: .8rem;
+  font-weight: 600;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  white-space: nowrap;
+}
+.btn-csv:hover { border-color: var(--gray-400); background: var(--gray-100); }
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-sm);
+}
+.amort-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+  min-width: 480px;
+}
+.amort-table thead th {
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: .73rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: 8px 10px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--gray-200);
+}
+.amort-table thead th:first-child { text-align: center; }
+.amort-table tbody td {
+  padding: 7px 10px;
+  text-align: right;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-100);
+  white-space: nowrap;
+}
+.amort-table tbody td:first-child {
+  text-align: center;
+  color: var(--gray-400);
+  font-size: .78rem;
+  font-weight: 600;
+}
+.amort-table tbody tr:last-child td { border-bottom: none; }
+.amort-table tbody tr:hover td { background: var(--gray-50); }
+/* Collapsed: hide rows beyond 24 */
+.amort-table tbody.amort-collapsed tr:nth-child(n + 25) { display: none; }
+.btn-amort-toggle {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  background: none;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--gray-600);
+  font-family: var(--font);
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.btn-amort-toggle:hover { border-color: var(--gray-400); color: var(--gray-900); }
+
+/* ─── Dark mode ──────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-50:   #1F2937;
+    --gray-100:  #111827;
+    --gray-200:  #374151;
+    --gray-400:  #9CA3AF;
+    --gray-600:  #D1D5DB;
+    --gray-700:  #E5E7EB;
+    --gray-900:  #F9FAFB;
+    --blue-50:   #1e3165;
+    --blue-100:  #1e3a8a;
+    --green-50:  #052e16;
+    --amber-50:  #451a03;
+    --red-50:    #3b0c0c;
+    --red-600:   #F87171;
+    --amber-600: #FCD34D;
+    --green-600: #4ADE80;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.5);
+  }
+  body { background: #0F172A; }
+  .site-header { background: #1E293B; border-bottom-color: #334155; }
+  .card { background: #1E293B; }
+  .site-footer { background: #1E293B; border-top-color: #334155; }
+  .input-wrap { background: #0F172A; border-color: #334155; }
+  .input-wrap input { color: #F1F5F9; }
+  .input-wrap input::placeholder { color: #64748B; }
+  .unit { background: #1E293B; border-left-color: #334155; color: #94A3B8; }
+  .unit-toggle { border-left-color: #334155; }
+  .toggle-btn { background: #1E293B; color: #CBD5E1; }
+  .toggle-btn:first-child { border-right-color: #334155; }
+  .detail-title { border-bottom-color: #334155; }
+  .detail-row { border-bottom-color: #1E293B; }
+  .btn-reset { background: #1E293B; border-color: #334155; color: #CBD5E1; }
+  .btn-reset:hover { background: #334155; border-color: #64748B; color: #F1F5F9; }
+  .btn-print { background: #475569; }
+  .btn-csv { background: #1E293B; color: #CBD5E1; border-color: #334155; }
+  .btn-csv:hover { background: #334155; border-color: #64748B; }
+  .amort-header { border-bottom-color: #334155; }
+  .amort-table thead th { background: #0F172A; color: #94A3B8; border-bottom-color: #334155; }
+  .amort-table tbody td { border-bottom-color: #1E293B; color: #CBD5E1; }
+  .amort-table tbody td:first-child { color: #64748B; }
+  .amort-table tbody tr:hover td { background: #0F172A; }
+  .btn-amort-toggle { border-color: #334155; color: #94A3B8; }
+  .btn-amort-toggle:hover { border-color: #64748B; color: #F1F5F9; }
+}
+
+/* ─── Print / Export PDF ─────────────────────────────────────────────────── */
+@media print {
+  @page { margin: 1.5cm; size: A4 portrait; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  .form-card,
+  .results-actions,
+  .btn-amort-toggle,
+  .site-footer { display: none !important; }
+
+  .site-header { position: static; box-shadow: none; border-bottom: 2px solid #2563EB; }
+  .main-layout { grid-template-columns: 1fr; padding: 0; gap: 16px; }
+  .card { box-shadow: none; border: 1px solid #E5E7EB; break-inside: avoid; }
+  .amort-card { break-before: page; }
+  .results-panel { display: block !important; }
+  /* Show all amortization rows when printing */
+  .amort-table tbody.amort-collapsed tr { display: table-row !important; }
+  .table-scroll { overflow: visible; }
+  .amort-table { min-width: unset; font-size: .75rem; }
+  .kpi-value { font-size: 1.2rem !important; }
+}
+
 /* ─── Responsive — Tablette (≥ 520px) ────────────────────────────────────── */
 @media (min-width: 520px) {
   .main-layout { padding: 24px 20px 40px; gap: 20px; }
