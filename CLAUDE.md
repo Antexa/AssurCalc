@@ -3,7 +3,8 @@
 ## Contexte du projet
 
 Site statique (HTML/CSS/JS pur) permettant de calculer le coût de l'assurance
-emprunteur à partir des données disponibles dans une offre de prêt immobilier.
+emprunteur à partir des données disponibles dans une offre de prêt immobilier,
+et de suivre l'avancement d'un prêt en cours.
 
 **Problème résolu :** le coût de l'assurance n'est pas toujours lisible
 directement sur les documents de prêt. Ce calculateur l'isole par déduction :
@@ -15,15 +16,18 @@ Mensualité hors assurance = Capital × r / (1 − (1+r)^−n)
   avec r = taux nominal / 12  et  n = durée en mois
 
 TAEA = (Coût assurance/mois × 12 / Capital) × 100
+
+Mois payés = f(date 1ʳᵉ échéance, date du jour)
+  → si jour_courant ≥ jour_échéance : totalMois + 1, sinon totalMois
 ```
 
 ## Architecture
 
 ```
 index.html   — structure HTML sémantique, formulaire + zone résultats
-style.css    — design system (variables CSS), responsive 3 breakpoints, dark mode, print
+style.css    — design system (variables CSS), responsive 4 breakpoints, dark mode, print
 script.js    — calculs, validation, graphique Canvas (donut), DOM updates,
-               tableau d'amortissement, partage URL hash, localStorage
+               tableau d'amortissement, suivi prêt en cours, partage URL hash, localStorage
 favicon.svg  — icône SVG inline (logo bleu)
 ```
 
@@ -44,6 +48,7 @@ python3 -m http.server 8080
 
 | Breakpoint  | Layout |
 |-------------|--------|
+| < 400 px    | Suivi KPI grid en 2 colonnes (au lieu de 3) |
 | < 520 px    | Colonne unique, cards padding réduit |
 | 520–768 px  | Formulaire 2 colonnes, KPIs 2 colonnes |
 | ≥ 768 px    | Layout 2 colonnes (formulaire fixe | résultats défilants) |
@@ -66,6 +71,12 @@ URL : `https://antexa.github.io/AssurCalc/`
 - ✅ Validation onblur des champs
 - ✅ Meta SEO + Open Graph + favicon + theme-color iOS
 - ✅ Responsive iPhone 16 (overflow-x corrigé)
+- ✅ **Suivi de prêt en cours** (date de 1ʳᵉ échéance → mois payés calculés automatiquement)
+  - Barre de progression avec % remboursé et plage de dates
+  - 6 KPIs : assurance payée/restante, intérêts payés/restants, capital remboursé/restant dû
+  - Tableau : colonne Date, lignes payées en vert, prochain prélèvement surligné en bleu
+  - Auto-expansion du tableau et scroll vers l'échéance courante
+  - Date persistée en localStorage, repliée/dépliée automatiquement
 
 ---
 
