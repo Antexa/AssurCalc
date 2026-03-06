@@ -768,6 +768,45 @@ body {
   .suivi-kpi-label { font-size: .65rem; }
 }
 
+/* ─── Responsive — Small mobile (< 520px) ──────────────────────────────── */
+@media (max-width: 519px) {
+  .main-layout { padding: 12px 8px 24px; }
+  .card { padding: 14px 12px; }
+
+  /* KPI cards: smaller icon, reduce gap */
+  .kpi-card { padding: 14px; gap: 12px; }
+  .kpi-icon { width: 38px; height: 38px; border-radius: 10px; }
+  .kpi-icon svg { width: 18px; height: 18px; }
+  .kpi-value { font-size: 1.15rem; }
+  .kpi-label { font-size: .72rem; }
+  .kpi-sub { font-size: .7rem; }
+
+  /* Button rows: stack vertically */
+  .btn-row { flex-direction: column; }
+  .btn-row .btn-calc { width: 100%; }
+  .btn-reset { justify-content: center; }
+  .results-actions { flex-direction: column; }
+  .results-actions .btn-share { width: 100%; }
+  .btn-print { justify-content: center; width: 100%; }
+
+  /* Detail card: stack dt/dd when labels are long */
+  .detail-row { flex-direction: column; gap: 2px; }
+  .detail-row dd { text-align: left; }
+
+  /* Suivi progress label */
+  .suivi-label { font-size: .78rem; }
+
+  /* Amort table: reduce min-width for less horizontal scroll */
+  .amort-table { min-width: 420px; font-size: .78rem; }
+  .amort-table thead th { padding: 6px 8px; font-size: .68rem; }
+  .amort-table tbody td { padding: 6px 8px; }
+
+  /* Chart: ensure donut doesn't overflow */
+  .chart-wrap { gap: 16px; }
+  #donutChart { max-width: 150px; }
+  .legend-item { font-size: .8rem; }
+}
+
 /* ─── Responsive — Tablette (≥ 520px) ────────────────────────────────────── */
 @media (min-width: 520px) {
   .main-layout { padding: 24px 20px 40px; gap: 20px; }
