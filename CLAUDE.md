@@ -1,0 +1,84 @@
+# AssurCalc — Calculateur d'Assurance Emprunteur
+
+## Contexte du projet
+
+Site statique (HTML/CSS/JS pur) permettant de calculer le coût de l'assurance
+emprunteur à partir des données disponibles dans une offre de prêt immobilier.
+
+**Problème résolu :** le coût de l'assurance n'est pas toujours lisible
+directement sur les documents de prêt. Ce calculateur l'isole par déduction :
+
+```
+Coût assurance/mois = Mensualité totale − Mensualité théorique hors assurance
+
+Mensualité hors assurance = Capital × r / (1 − (1+r)^−n)
+  avec r = taux nominal / 12  et  n = durée en mois
+
+TAEA = (Coût assurance/mois × 12 / Capital) × 100
+```
+
+## Architecture
+
+```
+index.html   — structure HTML sémantique, formulaire + zone résultats
+style.css    — design system (variables CSS), responsive 3 breakpoints
+script.js    — calculs, validation, graphique Canvas (donut), DOM updates
+```
+
+Aucune dépendance npm. Ouvrable directement dans un navigateur sans serveur.
+
+## Lancer le projet
+
+```bash
+# Option 1 — ouvrir directement
+open index.html
+
+# Option 2 — serveur local (évite les restrictions CORS éventuelles)
+python3 -m http.server 8080
+# puis http://localhost:8080
+```
+
+## Breakpoints responsive
+
+| Breakpoint | Layout |
+|-----------|--------|
+| < 480 px  | Colonne unique |
+| 480–768 px | Formulaire 2 colonnes, KPIs 2 colonnes |
+| ≥ 768 px  | Layout 2 colonnes (formulaire fixe | résultats défilants) |
+
+## Hébergement GitHub Pages
+
+Settings → Pages → Source : branche `main`, dossier `/`
+URL : `https://<username>.github.io/Cloud-Claude-Test/`
+
+---
+
+## Évolutions possibles
+
+### Court terme
+- **Simulation par TAEA cible** : l'utilisateur saisit un taux d'assurance
+  souhaité et obtient la mensualité équivalente — utile pour comparer les offres
+- **Comparateur multi-offres** : tableau côte à côte de 2-3 devis assureurs
+  (nom, TAEA, coût mensuel, économie vs assurance groupe)
+- **Exportation PDF** : bouton « Télécharger mon récapitulatif » via `window.print()`
+  + feuille de style `@media print`
+- **Partage par URL** : encoder les paramètres dans le hash (`#capital=180000&...`)
+  pour partager un calcul pré-rempli
+
+### Moyen terme
+- **Amortissement progressif** : option pour calculer l'assurance sur le capital
+  restant dû (CRD) plutôt que sur le capital initial — donne un coût total
+  différent et souvent plus avantageux
+- **Tableau d'amortissement complet** : ligne par ligne, mois par mois (capital,
+  intérêts, assurance, CRD) exportable en CSV
+- **Simulateur de délégation d'assurance** : comparer le coût de l'assurance
+  groupe bancaire vs une délégation externe avec économies cumulées sur la durée
+- **Mode sombre** : `prefers-color-scheme: dark` via variables CSS déjà structurées
+
+### Long terme
+- **Back-end léger** (ex. Cloudflare Workers) : sauvegarde de simulations,
+  historique, comparaisons entre différentes dates
+- **Intégration API assureurs** : récupération de vrais devis en temps réel
+- **PWA** : manifest + service worker pour utilisation hors-ligne sur mobile
+- **Internationalisation** : adapter les formules et formats pour d'autres pays
+  (Belgique, Suisse, Canada — réglementations différentes)
