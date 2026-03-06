@@ -43,7 +43,7 @@ function computeMonthsPaid(firstPaymentDate) {
   if (!firstPaymentDate) return 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  if (firstPaymentDate >= today) return 0;
+  if (firstPaymentDate > today) return 0;
   const totalMonths =
     (today.getFullYear() - firstPaymentDate.getFullYear()) * 12 +
     (today.getMonth()    - firstPaymentDate.getMonth());
@@ -58,10 +58,15 @@ function fmtMonthYear(date) {
   return date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
 }
 
-/** Return a new Date offset by n months */
+/** Return a new Date offset by n months (clamped to end of target month) */
 function addMonths(date, n) {
   const d = new Date(date);
-  d.setMonth(d.getMonth() + n);
+  const targetMonth = d.getMonth() + n;
+  d.setMonth(targetMonth);
+  // Clamp: if day overflowed into next month, go back to last day of target month
+  if (d.getMonth() !== ((targetMonth % 12) + 12) % 12) {
+    d.setDate(0); // last day of previous month
+  }
   return d;
 }
 
@@ -232,9 +237,9 @@ function renderAmortizationTable(rows, monthsPaid) {
 
   tbody.classList.add('amort-collapsed');
 
+  let expanded = false;
   if (rows.length > 24) {
     toggle.hidden = false;
-    let expanded = false;
     toggle.textContent = `Voir les ${rows.length - 24} mois restants ▾`;
     toggle.onclick = () => {
       expanded = !expanded;
@@ -249,6 +254,7 @@ function renderAmortizationTable(rows, monthsPaid) {
 
   // Auto-expand and scroll to current row when suivi is active
   if (paidUntil > 0 && rows.length > 24) {
+    expanded = true;
     tbody.classList.remove('amort-collapsed');
     toggle.textContent = 'Réduire ▴';
     setTimeout(() => {
@@ -485,12 +491,14 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
     `Sur une durée de ${durationLabel} — Capital : ${fmtEur(capital)}`;
 
   // ── Build share URL + text ──
-  const shareUrl = location.origin + location.pathname
+  const dateEcheanceVal = document.getElementById('dateEcheance').value;
+  let shareUrl = location.origin + location.pathname
     + '#capital=' + capital
     + '&mensualite=' + mensualite
     + '&taux=' + taux
     + '&duree=' + dureeRaw2
     + '&unite=' + durationUnit;
+  if (dateEcheanceVal) shareUrl += '&dateEcheance=' + dateEcheanceVal;
 
   const durationLabelShare = durationUnit === 'ans'
     ? dureeRaw2 + ' an' + (dureeRaw2 > 1 ? 's' : '')
@@ -584,11 +592,12 @@ document.getElementById('btnShare').addEventListener('click', async () => {
   if (!location.hash || location.hash.length < 2) return;
 
   const params = new URLSearchParams(location.hash.slice(1));
-  const capital    = params.get('capital');
-  const mensualite = params.get('mensualite');
-  const taux       = params.get('taux');
-  const duree      = params.get('duree');
-  const unite      = params.get('unite');
+  const capital       = params.get('capital');
+  const mensualite    = params.get('mensualite');
+  const taux          = params.get('taux');
+  const duree         = params.get('duree');
+  const unite         = params.get('unite');
+  const dateEcheance  = params.get('dateEcheance');
 
   if (!capital || !mensualite || !taux || !duree) return;
 
@@ -601,6 +610,16 @@ document.getElementById('btnShare').addEventListener('click', async () => {
     document.getElementById('btnMois').click();
   } else {
     document.getElementById('btnAns').click();
+  }
+
+  if (dateEcheance) {
+    document.getElementById('dateEcheance').value = dateEcheance;
+    const section = document.getElementById('suiviSection');
+    const btn     = document.getElementById('btnSuiviToggle');
+    const chevron = document.querySelector('.suivi-chevron');
+    section.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    if (chevron) chevron.textContent = '▴';
   }
 
   // Déclencher le calcul automatiquement
@@ -626,11 +645,17 @@ document.getElementById('btnPrint').addEventListener('click', () => {
 
 document.getElementById('btnCsvDownload').addEventListener('click', () => {
   if (!lastAmortRows.length) return;
-  const header = 'Mois;Capital remboursé (€);Intérêts (€);Assurance (€);Mensualité totale (€);Capital restant dû (€)';
-  const lines  = lastAmortRows.map(r =>
-    [r.month, r.principal.toFixed(2), r.interest.toFixed(2),
-     r.insurance.toFixed(2), r.total.toFixed(2), r.remaining.toFixed(2)].join(';')
-  );
+  const hasDates = lastAmortRows[0].date !== null;
+  const header = hasDates
+    ? 'Mois;Date;Capital remboursé (€);Intérêts (€);Assurance (€);Mensualité totale (€);Capital restant dû (€)'
+    : 'Mois;Capital remboursé (€);Intérêts (€);Assurance (€);Mensualité totale (€);Capital restant dû (€)';
+  const lines  = lastAmortRows.map(r => {
+    const cols = [r.month];
+    if (hasDates) cols.push(fmtMonthYear(r.date));
+    cols.push(r.principal.toFixed(2), r.interest.toFixed(2),
+     r.insurance.toFixed(2), r.total.toFixed(2), r.remaining.toFixed(2));
+    return cols.join(';');
+  });
   const csv  = '\uFEFF' + [header, ...lines].join('\n'); // BOM for Excel
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
@@ -741,5 +766,7 @@ document.getElementById('btnReset').addEventListener('click', () => {
 // ─── Restore on load (localStorage, sauf si hash URL présent) ────────────────
 
 if (!location.hash || location.hash.length < 2) {
-  loadFromStorage();
+  if (loadFromStorage()) {
+    document.getElementById('calcForm').dispatchEvent(new Event('submit'));
+  }
 }
