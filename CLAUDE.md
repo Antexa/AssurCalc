@@ -21,8 +21,10 @@ TAEA = (Coût assurance/mois × 12 / Capital) × 100
 
 ```
 index.html   — structure HTML sémantique, formulaire + zone résultats
-style.css    — design system (variables CSS), responsive 3 breakpoints
-script.js    — calculs, validation, graphique Canvas (donut), DOM updates
+style.css    — design system (variables CSS), responsive 3 breakpoints, dark mode, print
+script.js    — calculs, validation, graphique Canvas (donut), DOM updates,
+               tableau d'amortissement, partage URL hash, localStorage
+favicon.svg  — icône SVG inline (logo bleu)
 ```
 
 Aucune dépendance npm. Ouvrable directement dans un navigateur sans serveur.
@@ -40,16 +42,30 @@ python3 -m http.server 8080
 
 ## Breakpoints responsive
 
-| Breakpoint | Layout |
-|-----------|--------|
-| < 480 px  | Colonne unique |
-| 480–768 px | Formulaire 2 colonnes, KPIs 2 colonnes |
-| ≥ 768 px  | Layout 2 colonnes (formulaire fixe | résultats défilants) |
+| Breakpoint  | Layout |
+|-------------|--------|
+| < 520 px    | Colonne unique, cards padding réduit |
+| 520–768 px  | Formulaire 2 colonnes, KPIs 2 colonnes |
+| ≥ 768 px    | Layout 2 colonnes (formulaire fixe | résultats défilants) |
+| ≥ 1024 px   | Colonne formulaire élargie (460px) |
 
 ## Hébergement GitHub Pages
 
 Settings → Pages → Source : branche `main`, dossier `/`
-URL : `https://<username>.github.io/Cloud-Claude-Test/`
+URL : `https://antexa.github.io/AssurCalc/`
+
+## Fonctionnalités implémentées
+
+- ✅ Calcul TAEA, coût mensuel / annuel / total
+- ✅ Graphique donut Canvas (adapté au mode sombre)
+- ✅ Tableau d'amortissement mois par mois + export CSV
+- ✅ Partage Web Share API avec lien pré-rempli (hash URL)
+- ✅ Export PDF (`window.print()` + `@media print`)
+- ✅ Mode sombre automatique (`prefers-color-scheme: dark`)
+- ✅ Persistance localStorage + bouton Réinitialiser
+- ✅ Validation onblur des champs
+- ✅ Meta SEO + Open Graph + favicon + theme-color iOS
+- ✅ Responsive iPhone 16 (overflow-x corrigé)
 
 ---
 
@@ -60,20 +76,13 @@ URL : `https://<username>.github.io/Cloud-Claude-Test/`
   souhaité et obtient la mensualité équivalente — utile pour comparer les offres
 - **Comparateur multi-offres** : tableau côte à côte de 2-3 devis assureurs
   (nom, TAEA, coût mensuel, économie vs assurance groupe)
-- **Exportation PDF** : bouton « Télécharger mon récapitulatif » via `window.print()`
-  + feuille de style `@media print`
-- **Partage par URL** : encoder les paramètres dans le hash (`#capital=180000&...`)
-  pour partager un calcul pré-rempli
 
 ### Moyen terme
-- **Amortissement progressif** : option pour calculer l'assurance sur le capital
-  restant dû (CRD) plutôt que sur le capital initial — donne un coût total
-  différent et souvent plus avantageux
-- **Tableau d'amortissement complet** : ligne par ligne, mois par mois (capital,
-  intérêts, assurance, CRD) exportable en CSV
+- **Assurance sur capital restant dû (CRD)** : option pour calculer l'assurance
+  sur le CRD plutôt que sur le capital initial — donne un coût total différent
+  et souvent plus avantageux
 - **Simulateur de délégation d'assurance** : comparer le coût de l'assurance
   groupe bancaire vs une délégation externe avec économies cumulées sur la durée
-- **Mode sombre** : `prefers-color-scheme: dark` via variables CSS déjà structurées
 
 ### Long terme
 - **Back-end léger** (ex. Cloudflare Workers) : sauvegarde de simulations,
