@@ -164,6 +164,7 @@ function setFieldError(fieldId, hasError) {
 // ─── Share state ──────────────────────────────────────────────────────────────
 
 let lastShareText = null;
+let lastShareUrl  = null;
 
 // ─── Duration toggle ──────────────────────────────────────────────────────────
 
@@ -292,7 +293,14 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   document.getElementById('chartCaption').textContent =
     `Sur une durée de ${durationLabel} — Capital : ${fmtEur(capital)}`;
 
-  // ── Build share text ──
+  // ── Build share URL + text ──
+  const shareUrl = location.origin + location.pathname
+    + '#capital=' + capital
+    + '&mensualite=' + mensualite
+    + '&taux=' + taux
+    + '&duree=' + dureeRaw2
+    + '&unite=' + durationUnit;
+
   const durationLabelShare = durationUnit === 'ans'
     ? dureeRaw2 + ' an' + (dureeRaw2 > 1 ? 's' : '')
     : durationMonths + ' mois';
@@ -308,8 +316,9 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
     '🟣 Coût total assurance : ' + fmtEur(Math.max(0, res.insuranceTotal)),
     '📈 TAEA : ' + fmtPct(Math.max(0, res.taea)),
     '',
-    'Calculé sur https://antexa.github.io/Cloud-Claude-Test/',
+    shareUrl,
   ].join('\n');
+  lastShareUrl = shareUrl;
 
   // ── Show results ──
   const resultsPanel = document.getElementById('results');
@@ -330,23 +339,53 @@ document.getElementById('btnShare').addEventListener('click', async () => {
       await navigator.share({
         title: 'Mon assurance emprunteur — AssurCalc',
         text: lastShareText,
+        url: lastShareUrl,
       });
     } catch (err) {
       // User cancelled or browser blocked — ignore
     }
   } else {
-    // Fallback : copier dans le presse-papier
+    // Fallback : copier le lien pré-rempli dans le presse-papier
     try {
-      await navigator.clipboard.writeText(lastShareText);
+      await navigator.clipboard.writeText(lastShareUrl);
       const btn = document.getElementById('btnShare');
       const original = btn.innerHTML;
-      btn.textContent = '✓ Copié dans le presse-papier';
+      btn.textContent = '✓ Lien copié dans le presse-papier';
       setTimeout(() => { btn.innerHTML = original; }, 2500);
     } catch {
       // Ignore silently
     }
   }
 });
+
+// ─── Pre-fill from URL hash ───────────────────────────────────────────────────
+
+(function restoreFromHash() {
+  if (!location.hash || location.hash.length < 2) return;
+
+  const params = new URLSearchParams(location.hash.slice(1));
+  const capital    = params.get('capital');
+  const mensualite = params.get('mensualite');
+  const taux       = params.get('taux');
+  const duree      = params.get('duree');
+  const unite      = params.get('unite');
+
+  if (!capital || !mensualite || !taux || !duree) return;
+
+  document.getElementById('capital').value    = capital;
+  document.getElementById('mensualite').value = mensualite;
+  document.getElementById('taux').value       = taux;
+  document.getElementById('duree').value      = duree;
+
+  if (unite === 'mois') {
+    document.getElementById('btnMois').click();
+  } else {
+    document.getElementById('btnAns').click();
+  }
+
+  // Déclencher le calcul automatiquement
+  document.getElementById('calcForm').dispatchEvent(new Event('submit'));
+})();
 
 // ─── Live re-format inputs (accept comma as decimal) ─────────────────────────
 ['capital', 'mensualite', 'taux', 'duree'].forEach(id => {
