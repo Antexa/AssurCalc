@@ -1,6 +1,6 @@
 # AssurCalc — Calculateur d'Assurance Emprunteur
 
-Calculez facilement le coût de votre assurance emprunteur à partir des données de votre offre de prêt immobilier.
+Calculez facilement le coût de votre assurance emprunteur à partir des données de votre offre de prêt immobilier. Suivez également l'avancement d'un prêt en cours.
 
 **Site en ligne :** [https://antexa.github.io/AssurCalc/](https://antexa.github.io/AssurCalc/)
 
@@ -9,6 +9,7 @@ Calculez facilement le coût de votre assurance emprunteur à partir des donnée
 - Calcul du coût mensuel, annuel, total et du TAEA (Taux Annuel Effectif d'Assurance)
 - Graphique de répartition de la mensualité (donut Canvas)
 - Tableau d'amortissement complet mois par mois — exportable en CSV
+- **Suivi de prêt en cours** : barre de progression, bilan payé/restant (assurance, intérêts, capital), surbrillance des lignes du tableau
 - Partage par lien pré-rempli (Web Share API — SMS, WhatsApp, iMessage…)
 - Export PDF via impression navigateur (`@media print`)
 - Mode sombre automatique (`prefers-color-scheme: dark`)

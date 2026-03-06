@@ -549,6 +549,132 @@ body {
 }
 .btn-amort-toggle:hover { border-color: var(--gray-400); color: var(--gray-900); }
 
+/* ─── Suivi — toggle bouton dans le formulaire ───────────────────────────── */
+.suivi-toggle-row { margin-bottom: 16px; }
+.btn-suivi-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--blue-50);
+  color: var(--blue-600);
+  font-family: var(--font);
+  font-size: .86rem;
+  font-weight: 600;
+  border: 1.5px dashed var(--blue-600);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  text-align: left;
+}
+.btn-suivi-toggle:hover { background: var(--blue-100); }
+.btn-suivi-toggle:focus-visible { outline: 3px solid var(--blue-600); outline-offset: 2px; }
+.suivi-chevron { margin-left: auto; font-size: .9rem; }
+.suivi-section {
+  padding: 16px;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+/* ─── Suivi — panneau résultats ──────────────────────────────────────────── */
+.suivi-card { border-left: 4px solid var(--blue-600); }
+.suivi-progress-wrap { margin-bottom: 20px; }
+.suivi-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.suivi-label { font-size: .84rem; color: var(--gray-600); flex: 1; }
+.suivi-pct-badge {
+  font-size: .92rem;
+  font-weight: 800;
+  color: var(--blue-600);
+  white-space: nowrap;
+}
+.progress-bar {
+  height: 10px;
+  background: var(--gray-200);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-600) 0%, var(--blue-600) 100%);
+  border-radius: 99px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+.suivi-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.suivi-kpi {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.suivi-kpi-done { background: var(--green-50); border: 1px solid #BBF7D0; }
+.suivi-kpi-rem  { background: var(--blue-50);  border: 1px solid var(--blue-100); }
+.suivi-kpi-label {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.suivi-kpi-done .suivi-kpi-label { color: var(--green-600); }
+.suivi-kpi-rem  .suivi-kpi-label { color: var(--blue-600); }
+.suivi-kpi-value {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  word-break: break-word;
+}
+
+/* ─── Tableau d'amortissement : surbrillance suivi ───────────────────────── */
+.amort-table .col-date { display: none; }
+.amort-table.suivi-active .col-date {
+  display: table-cell;
+  text-align: center;
+  white-space: nowrap;
+  font-size: .78rem;
+  color: var(--gray-600);
+}
+.amort-table thead th.col-date { text-align: center; }
+
+/* Lignes payées */
+.amort-row-paid td {
+  background: var(--green-50) !important;
+  color: var(--gray-400) !important;
+}
+.amort-row-paid td:first-child { color: var(--green-600) !important; }
+
+/* Ligne courante (prochain prélèvement) */
+.amort-row-current td {
+  background: var(--blue-50) !important;
+  border-top: 2px solid var(--blue-600) !important;
+  border-bottom: 2px solid var(--blue-600) !important;
+  color: var(--gray-900) !important;
+  font-weight: 600;
+}
+.amort-row-current td:first-child { color: var(--blue-600) !important; }
+.amort-current-badge {
+  display: block;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--blue-600);
+  margin-top: 2px;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+
 /* ─── Dark mode ──────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -595,6 +721,21 @@ body {
   .amort-table tbody tr:hover td { background: #0F172A; }
   .btn-amort-toggle { border-color: #334155; color: #94A3B8; }
   .btn-amort-toggle:hover { border-color: #64748B; color: #F1F5F9; }
+  /* Suivi */
+  .btn-suivi-toggle { background: #1e3165; border-color: #3B82F6; color: #93C5FD; }
+  .btn-suivi-toggle:hover { background: #1e3a8a; }
+  .suivi-section { background: #1e3165; border-color: #1e3a8a; }
+  .progress-bar { background: #334155; }
+  .suivi-kpi-done { background: #052e16; border-color: #166534; }
+  .suivi-kpi-rem  { background: #1e3165; border-color: #1e3a8a; }
+  .suivi-kpi-done .suivi-kpi-label { color: #4ADE80; }
+  .suivi-kpi-rem  .suivi-kpi-label { color: #93C5FD; }
+  /* Lignes tableau suivi */
+  .amort-row-paid td { background: #052e16 !important; color: #4B5563 !important; }
+  .amort-row-paid td:first-child { color: #4ADE80 !important; }
+  .amort-row-current td { background: #1e3165 !important; color: #F1F5F9 !important; }
+  .amort-current-badge { color: #93C5FD; }
+  .amort-table.suivi-active .col-date { color: #94A3B8; }
 }
 
 /* ─── Print / Export PDF ─────────────────────────────────────────────────── */
@@ -617,6 +758,14 @@ body {
   .table-scroll { overflow: visible; }
   .amort-table { min-width: unset; font-size: .75rem; }
   .kpi-value { font-size: 1.2rem !important; }
+}
+
+/* ─── Suivi KPI grid responsive ─────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .suivi-kpi-grid { grid-template-columns: 1fr 1fr; }
+  .suivi-kpi { padding: 8px 10px; }
+  .suivi-kpi-value { font-size: .8rem; }
+  .suivi-kpi-label { font-size: .65rem; }
 }
 
 /* ─── Responsive — Tablette (≥ 520px) ────────────────────────────────────── */
