@@ -2,7 +2,7 @@
 
 Calculez facilement le coût de votre assurance emprunteur à partir des données de votre offre de prêt immobilier.
 
-**Site en ligne :** [https://antexa.github.io/Cloud-Claude-Test/](https://antexa.github.io/Cloud-Claude-Test/)
+**Site en ligne :** [https://antexa.github.io/AssurCal/](https://antexa.github.io/AssurCal/)
 
 ## Fonctionnalités
 
@@ -11,3 +11,8 @@ Calculez facilement le coût de votre assurance emprunteur à partir des donnée
 - Graphique de répartition de la mensualité
 - Responsive mobile / tablette / desktop
 - Aucune dépendance — fonctionne directement dans le navigateur
+
+## Licence
+
+Ce projet est distribué sous licence **MIT** — libre d'utilisation, de copie, de modification et de redistribution.
+Voir le fichier [LICENSE](./LICENSE) pour le texte complet.
