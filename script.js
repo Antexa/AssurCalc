@@ -77,7 +77,17 @@ function calculate(capital, totalMonthly, annualRate, durationMonths) {
  * @param {HTMLCanvasElement} canvas
  * @param {Array<{value: number, color: string, label: string}>} segments
  */
+function getThemeColors() {
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    holeFill:    dark ? '#1E293B' : 'white',
+    textColor:   dark ? '#E5E7EB' : '#374151',
+    subtextColor: '#9CA3AF',
+  };
+}
+
 function drawDonut(canvas, segments) {
+  const { holeFill, textColor, subtextColor } = getThemeColors();
   const ctx    = canvas.getContext('2d');
   const size   = canvas.width;
   const cx     = size / 2;
@@ -88,38 +98,88 @@ function drawDonut(canvas, segments) {
 
   ctx.clearRect(0, 0, size, size);
 
-  let startAngle = -Math.PI / 2; // start at top
+  let startAngle = -Math.PI / 2;
 
   segments.forEach((seg) => {
     const slice = (seg.value / total) * 2 * Math.PI;
-
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
     ctx.closePath();
     ctx.fillStyle = seg.color;
     ctx.fill();
-
     startAngle += slice;
   });
 
-  // Cut inner circle (donut hole)
+  // Donut hole
   ctx.beginPath();
   ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
-  ctx.fillStyle = 'white';
+  ctx.fillStyle = holeFill;
   ctx.fill();
 
   // Center label
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#374151';
+  ctx.fillStyle = textColor;
   ctx.font = `700 ${Math.round(size * 0.11)}px Inter, system-ui, sans-serif`;
   ctx.fillText(segments[1]
     ? ((segments[1].value / total) * 100).toFixed(1) + '%'
     : '', cx, cy - 6);
   ctx.font = `500 ${Math.round(size * 0.078)}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = '#9CA3AF';
+  ctx.fillStyle = subtextColor;
   ctx.fillText('assurance', cx, cy + size * 0.085);
+}
+
+// ─── Amortization table ───────────────────────────────────────────────────────
+
+let lastAmortRows = [];
+
+function buildAmortizationRows(capital, r, n, monthlyNoInsurance, insuranceMonthly) {
+  const rows = [];
+  let remaining = capital;
+  for (let i = 1; i <= n; i++) {
+    const interest  = r === 0 ? 0 : remaining * r;
+    const principal = monthlyNoInsurance - interest;
+    const total     = monthlyNoInsurance + insuranceMonthly;
+    remaining       = Math.max(0, remaining - principal);
+    rows.push({ month: i, principal, interest, insurance: insuranceMonthly, total, remaining });
+  }
+  return rows;
+}
+
+function renderAmortizationTable(rows) {
+  lastAmortRows = rows;
+  const tbody  = document.getElementById('amortTbody');
+  const toggle = document.getElementById('btnAmortToggle');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.month}</td>
+      <td>${fmtEur(r.principal)}</td>
+      <td>${fmtEur(r.interest)}</td>
+      <td>${fmtEur(r.insurance)}</td>
+      <td>${fmtEur(r.total)}</td>
+      <td>${fmtEur(r.remaining)}</td>
+    </tr>
+  `).join('');
+
+  tbody.classList.add('amort-collapsed');
+
+  if (rows.length > 24) {
+    toggle.hidden = false;
+    let expanded = false;
+    toggle.textContent = `Voir les ${rows.length - 24} mois restants ▾`;
+    toggle.onclick = () => {
+      expanded = !expanded;
+      tbody.classList.toggle('amort-collapsed', !expanded);
+      toggle.textContent = expanded
+        ? 'Réduire ▴'
+        : `Voir les ${rows.length - 24} mois restants ▾`;
+    };
+  } else {
+    toggle.hidden = true;
+  }
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
@@ -161,9 +221,11 @@ function setFieldError(fieldId, hasError) {
   group.classList.toggle('error', hasError);
 }
 
-// ─── Share state ──────────────────────────────────────────────────────────────
+// ─── Shared state ─────────────────────────────────────────────────────────────
 
 let lastShareText = null;
+let lastShareUrl  = null;
+let lastChartData = null; // { canvas, segments } — for dark mode redraw
 
 // ─── Duration toggle ──────────────────────────────────────────────────────────
 
@@ -275,6 +337,7 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   ];
 
   drawDonut(canvas, segments);
+  lastChartData = { canvas, segments };
 
   // Legend
   const legend = document.getElementById('chartLegend');
@@ -292,7 +355,14 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   document.getElementById('chartCaption').textContent =
     `Sur une durée de ${durationLabel} — Capital : ${fmtEur(capital)}`;
 
-  // ── Build share text ──
+  // ── Build share URL + text ──
+  const shareUrl = location.origin + location.pathname
+    + '#capital=' + capital
+    + '&mensualite=' + mensualite
+    + '&taux=' + taux
+    + '&duree=' + dureeRaw2
+    + '&unite=' + durationUnit;
+
   const durationLabelShare = durationUnit === 'ans'
     ? dureeRaw2 + ' an' + (dureeRaw2 > 1 ? 's' : '')
     : durationMonths + ' mois';
@@ -308,8 +378,18 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
     '🟣 Coût total assurance : ' + fmtEur(Math.max(0, res.insuranceTotal)),
     '📈 TAEA : ' + fmtPct(Math.max(0, res.taea)),
     '',
-    'Calculé sur https://antexa.github.io/Cloud-Claude-Test/',
+    shareUrl,
   ].join('\n');
+  lastShareUrl = shareUrl;
+
+  // ── Amortization table ──
+  const r = taux / 100 / 12;
+  renderAmortizationTable(
+    buildAmortizationRows(capital, r, durationMonths, res.monthlyWithoutInsurance, Math.max(0, res.insuranceMonthly))
+  );
+
+  // ── Persist values ──
+  saveToStorage();
 
   // ── Show results ──
   const resultsPanel = document.getElementById('results');
@@ -330,17 +410,18 @@ document.getElementById('btnShare').addEventListener('click', async () => {
       await navigator.share({
         title: 'Mon assurance emprunteur — AssurCalc',
         text: lastShareText,
+        url: lastShareUrl,
       });
     } catch (err) {
       // User cancelled or browser blocked — ignore
     }
   } else {
-    // Fallback : copier dans le presse-papier
+    // Fallback : copier le lien pré-rempli dans le presse-papier
     try {
-      await navigator.clipboard.writeText(lastShareText);
+      await navigator.clipboard.writeText(lastShareUrl);
       const btn = document.getElementById('btnShare');
       const original = btn.innerHTML;
-      btn.textContent = '✓ Copié dans le presse-papier';
+      btn.textContent = '✓ Lien copié dans le presse-papier';
       setTimeout(() => { btn.innerHTML = original; }, 2500);
     } catch {
       // Ignore silently
@@ -348,14 +429,138 @@ document.getElementById('btnShare').addEventListener('click', async () => {
   }
 });
 
-// ─── Live re-format inputs (accept comma as decimal) ─────────────────────────
+// ─── Pre-fill from URL hash ───────────────────────────────────────────────────
+
+(function restoreFromHash() {
+  if (!location.hash || location.hash.length < 2) return;
+
+  const params = new URLSearchParams(location.hash.slice(1));
+  const capital    = params.get('capital');
+  const mensualite = params.get('mensualite');
+  const taux       = params.get('taux');
+  const duree      = params.get('duree');
+  const unite      = params.get('unite');
+
+  if (!capital || !mensualite || !taux || !duree) return;
+
+  document.getElementById('capital').value    = capital;
+  document.getElementById('mensualite').value = mensualite;
+  document.getElementById('taux').value       = taux;
+  document.getElementById('duree').value      = duree;
+
+  if (unite === 'mois') {
+    document.getElementById('btnMois').click();
+  } else {
+    document.getElementById('btnAns').click();
+  }
+
+  // Déclencher le calcul automatiquement
+  document.getElementById('calcForm').dispatchEvent(new Event('submit'));
+})();
+
+// ─── Print button ─────────────────────────────────────────────────────────────
+
+document.getElementById('btnPrint').addEventListener('click', () => {
+  // Expand amortization table before printing so all rows are visible
+  const tbody  = document.getElementById('amortTbody');
+  const toggle = document.getElementById('btnAmortToggle');
+  const wasCollapsed = tbody && tbody.classList.contains('amort-collapsed');
+  if (wasCollapsed) tbody.classList.remove('amort-collapsed');
+
+  window.print();
+
+  // Restore state after print dialog closes
+  if (wasCollapsed) tbody.classList.add('amort-collapsed');
+});
+
+// ─── CSV download ─────────────────────────────────────────────────────────────
+
+document.getElementById('btnCsvDownload').addEventListener('click', () => {
+  if (!lastAmortRows.length) return;
+  const header = 'Mois;Capital remboursé (€);Intérêts (€);Assurance (€);Mensualité totale (€);Capital restant dû (€)';
+  const lines  = lastAmortRows.map(r =>
+    [r.month, r.principal.toFixed(2), r.interest.toFixed(2),
+     r.insurance.toFixed(2), r.total.toFixed(2), r.remaining.toFixed(2)].join(';')
+  );
+  const csv  = '\uFEFF' + [header, ...lines].join('\n'); // BOM for Excel
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: 'amortissement-assurCalc.csv' });
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ─── Dark mode: redraw canvas on theme change ─────────────────────────────────
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (lastChartData) drawDonut(lastChartData.canvas, lastChartData.segments);
+});
+
+// ─── localStorage persistence ─────────────────────────────────────────────────
+
+const LS_KEY = 'assurcalc_v1';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      capital:    document.getElementById('capital').value,
+      mensualite: document.getElementById('mensualite').value,
+      taux:       document.getElementById('taux').value,
+      duree:      document.getElementById('duree').value,
+      unite:      durationUnit,
+    }));
+  } catch { /* quota or private mode — ignore */ }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d.capital || !d.mensualite || !d.taux || !d.duree) return false;
+    document.getElementById('capital').value    = d.capital;
+    document.getElementById('mensualite').value = d.mensualite;
+    document.getElementById('taux').value       = d.taux;
+    document.getElementById('duree').value      = d.duree;
+    if (d.unite === 'mois') document.getElementById('btnMois').click();
+    else                    document.getElementById('btnAns').click();
+    return true;
+  } catch { return false; }
+}
+
+function clearStorage() {
+  try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+}
+
+// ─── Reset form ───────────────────────────────────────────────────────────────
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  ['capital', 'mensualite', 'taux', 'duree'].forEach(id => {
+    document.getElementById(id).value = '';
+    setFieldError(id, false);
+  });
+  clearError();
+  clearWarning();
+  document.getElementById('btnAns').click();
+  document.getElementById('results').hidden = true;
+  clearStorage();
+  lastShareText = null;
+  lastShareUrl  = null;
+  document.getElementById('capital').focus();
+});
+
+// ─── Live re-format + blur validation + autosave ──────────────────────────────
+
 ['capital', 'mensualite', 'taux', 'duree'].forEach(id => {
   document.getElementById(id).addEventListener('blur', function () {
     const val = parseNum(this.value);
     if (!isNaN(val) && val > 0) {
-      // Normalise: replace comma with dot for consistency
       this.value = this.value.trim().replace(',', '.');
+      setFieldError(id, false);
+    } else if (this.value.trim() !== '') {
+      setFieldError(id, true);
     }
+    saveToStorage();
   });
   // Clear error state on input
   document.getElementById(id).addEventListener('input', function () {
@@ -364,3 +569,9 @@ document.getElementById('btnShare').addEventListener('click', async () => {
     clearError();
   });
 });
+
+// ─── Restore on load (localStorage, sauf si hash URL présent) ────────────────
+
+if (!location.hash || location.hash.length < 2) {
+  loadFromStorage();
+}
