@@ -161,6 +161,10 @@ function setFieldError(fieldId, hasError) {
   group.classList.toggle('error', hasError);
 }
 
+// ─── Share state ──────────────────────────────────────────────────────────────
+
+let lastShareText = null;
+
 // ─── Duration toggle ──────────────────────────────────────────────────────────
 
 let durationUnit = 'ans'; // 'ans' | 'mois'
@@ -288,12 +292,59 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   document.getElementById('chartCaption').textContent =
     `Sur une durée de ${durationLabel} — Capital : ${fmtEur(capital)}`;
 
+  // ── Build share text ──
+  const durationLabelShare = durationUnit === 'ans'
+    ? dureeRaw2 + ' an' + (dureeRaw2 > 1 ? 's' : '')
+    : durationMonths + ' mois';
+  lastShareText = [
+    '📊 Mon assurance emprunteur — AssurCalc',
+    '',
+    '• Capital : ' + fmtEur(capital),
+    '• Durée : ' + durationLabelShare,
+    '• Taux nominal : ' + fmtPct(taux, 2),
+    '',
+    '🔵 Coût mensuel assurance : ' + fmtEur(Math.max(0, res.insuranceMonthly)),
+    '🔵 Coût annuel assurance : ' + fmtEur(Math.max(0, res.insuranceAnnual)),
+    '🟣 Coût total assurance : ' + fmtEur(Math.max(0, res.insuranceTotal)),
+    '📈 TAEA : ' + fmtPct(Math.max(0, res.taea)),
+    '',
+    'Calculé sur https://antexa.github.io/Cloud-Claude-Test/',
+  ].join('\n');
+
   // ── Show results ──
   const resultsPanel = document.getElementById('results');
   resultsPanel.hidden = false;
   // Smooth scroll to results on mobile
   if (window.innerWidth < 768) {
     setTimeout(() => resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+});
+
+// ─── Share button ─────────────────────────────────────────────────────────────
+
+document.getElementById('btnShare').addEventListener('click', async () => {
+  if (!lastShareText) return;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'Mon assurance emprunteur — AssurCalc',
+        text: lastShareText,
+      });
+    } catch (err) {
+      // User cancelled or browser blocked — ignore
+    }
+  } else {
+    // Fallback : copier dans le presse-papier
+    try {
+      await navigator.clipboard.writeText(lastShareText);
+      const btn = document.getElementById('btnShare');
+      const original = btn.innerHTML;
+      btn.textContent = '✓ Copié dans le presse-papier';
+      setTimeout(() => { btn.innerHTML = original; }, 2500);
+    } catch {
+      // Ignore silently
+    }
   }
 });
 
