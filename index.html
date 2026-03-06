@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur Assurance Emprunteur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#2563EB"/>
+          <path d="M8 22L12 10L16 18L20 13L24 22" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>AssurCalc</span>
+      </div>
+      <p class="header-tagline">Calculateur d'assurance emprunteur</p>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    <!-- ── FORMULAIRE ── -->
+    <section class="card form-card" aria-label="Données de votre prêt">
+      <h2 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Données de votre prêt
+      </h2>
+
+      <form id="calcForm" novalidate>
+        <div class="form-grid">
+
+          <div class="field-group">
+            <label for="capital">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="#6B7280" stroke-width="2"/>
+                <path d="M12 6v6l4 2" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Capital emprunté
+            </label>
+            <div class="input-wrap">
+              <input type="text" id="capital" inputmode="decimal" placeholder="180 000" autocomplete="off" />
+              <span class="unit">€</span>
+            </div>
+            <span class="field-hint">Montant total du prêt</span>
+          </div>
+
+          <div class="field-group">
+            <label for="mensualite">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="#6B7280" stroke-width="2"/>
+                <path d="M16 2v4M8 2v4M3 10h18" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Mensualité totale
+            </label>
+            <div class="input-wrap">
+              <input type="text" id="mensualite" inputmode="decimal" placeholder="950" autocomplete="off" />
+              <span class="unit">€/mois</span>
+            </div>
+            <span class="field-hint">Montant prélevé chaque mois (assurance incluse)</span>
+          </div>
+
+          <div class="field-group">
+            <label for="taux">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6h.01M18 18h.01M6 18L18 6" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="6" cy="6" r="2" stroke="#6B7280" stroke-width="2"/>
+                <circle cx="18" cy="18" r="2" stroke="#6B7280" stroke-width="2"/>
+              </svg>
+              Taux nominal annuel
+            </label>
+            <div class="input-wrap">
+              <input type="text" id="taux" inputmode="decimal" placeholder="3,5" autocomplete="off" />
+              <span class="unit">%/an</span>
+            </div>
+            <span class="field-hint">Taux d'intérêt indiqué dans votre offre de prêt</span>
+          </div>
+
+          <div class="field-group">
+            <label for="duree">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="#6B7280" stroke-width="2"/>
+                <path d="M12 7v5l3 3" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Durée du prêt
+            </label>
+            <div class="input-wrap">
+              <input type="text" id="duree" inputmode="numeric" placeholder="20" autocomplete="off" />
+              <div class="unit-toggle" role="group" aria-label="Unité de durée">
+                <button type="button" id="btnAns" class="toggle-btn active" aria-pressed="true">ans</button>
+                <button type="button" id="btnMois" class="toggle-btn" aria-pressed="false">mois</button>
+              </div>
+            </div>
+            <span class="field-hint">Durée totale du remboursement</span>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <div id="formError" class="alert alert-error" role="alert" hidden></div>
+
+        <button type="submit" class="btn-calc">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M8 12l4 4 8-8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Calculer mon assurance
+        </button>
+      </form>
+    </section>
+
+    <!-- ── RÉSULTATS ── -->
+    <section class="results-panel" id="results" aria-live="polite" aria-label="Résultats du calcul" hidden>
+
+      <div class="alert alert-warning" id="warningMsg" hidden role="alert"></div>
+
+      <h2 class="card-title results-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Coût de votre assurance
+      </h2>
+
+      <!-- Cartes principale × 3 -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-primary">
+          <div class="kpi-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" stroke-width="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Par mois</span>
+            <span class="kpi-value" id="rMois">—</span>
+            <span class="kpi-sub">coût mensuel assurance</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-secondary">
+          <div class="kpi-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Par an</span>
+            <span class="kpi-value" id="rAn">—</span>
+            <span class="kpi-sub">coût annuel assurance</span>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-total">
+          <div class="kpi-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Total sur la durée</span>
+            <span class="kpi-value" id="rTotal">—</span>
+            <span class="kpi-sub">coût total assurance</span>
+          </div>
+        </div>
+      </div><!-- /kpi-grid -->
+
+      <!-- Détail -->
+      <div class="card detail-card">
+        <h3 class="detail-title">Détail du calcul</h3>
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt>Mensualité totale saisie</dt>
+            <dd id="dMensualiteTotale">—</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Mensualité hors assurance</dt>
+            <dd id="dMensualiteHors">—</dd>
+          </div>
+          <div class="detail-row detail-row--highlight">
+            <dt>Part assurance dans la mensualité</dt>
+            <dd id="dPartPct">—</dd>
+          </div>
+          <div class="detail-row">
+            <dt>TAEA (Taux Annuel Effectif d'Assurance)</dt>
+            <dd id="dTaea">—</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Coût total intérêts du prêt</dt>
+            <dd id="dInterets">—</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Graphique -->
+      <div class="card chart-card">
+        <h3 class="detail-title">Répartition de votre mensualité</h3>
+        <div class="chart-wrap">
+          <canvas id="donutChart" width="200" height="200" aria-label="Graphique répartition mensualité" role="img"></canvas>
+          <div class="chart-legend" id="chartLegend"></div>
+        </div>
+        <p class="chart-caption" id="chartCaption"></p>
+      </div>
+
+    </section><!-- /results -->
+  </main>
+
+  <footer class="site-footer">
+    <p>Les calculs sont effectués localement dans votre navigateur — aucune donnée n'est transmise. Résultats à titre indicatif.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
