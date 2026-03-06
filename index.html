@@ -120,12 +120,21 @@
 
         <div id="formError" class="alert alert-error" role="alert" hidden></div>
 
-        <button type="submit" class="btn-calc">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M8 12l4 4 8-8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Calculer mon assurance
-        </button>
+        <div class="btn-row">
+          <button type="submit" class="btn-calc">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M8 12l4 4 8-8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Calculer
+          </button>
+          <button type="button" id="btnReset" class="btn-reset" aria-label="Réinitialiser le formulaire">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 12a9 9 0 109-9 9 9 0 00-6.3 2.58L3 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3v5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Réinitialiser
+          </button>
+        </div>
       </form>
     </section>
 

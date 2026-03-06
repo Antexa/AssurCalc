@@ -229,6 +229,35 @@ body {
 .btn-calc:active { transform: translateY(1px); box-shadow: none; }
 .btn-calc:focus-visible { outline: 3px solid var(--blue-600); outline-offset: 3px; }
 
+/* ─── Button row (Calculer + Réinitialiser) ─────────────────────────────── */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.btn-row .btn-calc {
+  flex: 1;
+}
+.btn-reset {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 16px;
+  background: white;
+  color: var(--gray-600);
+  font-family: var(--font);
+  font-size: .9rem;
+  font-weight: 600;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  white-space: nowrap;
+}
+.btn-reset:hover  { border-color: var(--gray-400); color: var(--gray-900); background: var(--gray-50); }
+.btn-reset:active { background: var(--gray-100); }
+.btn-reset:focus-visible { outline: 3px solid var(--blue-600); outline-offset: 3px; }
+
 /* ─── Share button ───────────────────────────────────────────────────────── */
 .btn-share {
   display: flex;

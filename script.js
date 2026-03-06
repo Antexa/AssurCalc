@@ -320,6 +320,9 @@ document.getElementById('calcForm').addEventListener('submit', (e) => {
   ].join('\n');
   lastShareUrl = shareUrl;
 
+  // ── Persist values ──
+  saveToStorage();
+
   // ── Show results ──
   const resultsPanel = document.getElementById('results');
   resultsPanel.hidden = false;
@@ -387,14 +390,71 @@ document.getElementById('btnShare').addEventListener('click', async () => {
   document.getElementById('calcForm').dispatchEvent(new Event('submit'));
 })();
 
-// ─── Live re-format inputs (accept comma as decimal) ─────────────────────────
+// ─── localStorage persistence ─────────────────────────────────────────────────
+
+const LS_KEY = 'assurcalc_v1';
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      capital:    document.getElementById('capital').value,
+      mensualite: document.getElementById('mensualite').value,
+      taux:       document.getElementById('taux').value,
+      duree:      document.getElementById('duree').value,
+      unite:      durationUnit,
+    }));
+  } catch { /* quota or private mode — ignore */ }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d.capital || !d.mensualite || !d.taux || !d.duree) return false;
+    document.getElementById('capital').value    = d.capital;
+    document.getElementById('mensualite').value = d.mensualite;
+    document.getElementById('taux').value       = d.taux;
+    document.getElementById('duree').value      = d.duree;
+    if (d.unite === 'mois') document.getElementById('btnMois').click();
+    else                    document.getElementById('btnAns').click();
+    return true;
+  } catch { return false; }
+}
+
+function clearStorage() {
+  try { localStorage.removeItem(LS_KEY); } catch { /* ignore */ }
+}
+
+// ─── Reset form ───────────────────────────────────────────────────────────────
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  ['capital', 'mensualite', 'taux', 'duree'].forEach(id => {
+    document.getElementById(id).value = '';
+    setFieldError(id, false);
+  });
+  clearError();
+  clearWarning();
+  document.getElementById('btnAns').click();
+  document.getElementById('results').hidden = true;
+  clearStorage();
+  lastShareText = null;
+  lastShareUrl  = null;
+  document.getElementById('capital').focus();
+});
+
+// ─── Live re-format + blur validation + autosave ──────────────────────────────
+
 ['capital', 'mensualite', 'taux', 'duree'].forEach(id => {
   document.getElementById(id).addEventListener('blur', function () {
     const val = parseNum(this.value);
     if (!isNaN(val) && val > 0) {
-      // Normalise: replace comma with dot for consistency
       this.value = this.value.trim().replace(',', '.');
+      setFieldError(id, false);
+    } else if (this.value.trim() !== '') {
+      setFieldError(id, true);
     }
+    saveToStorage();
   });
   // Clear error state on input
   document.getElementById(id).addEventListener('input', function () {
@@ -403,3 +463,9 @@ document.getElementById('btnShare').addEventListener('click', async () => {
     clearError();
   });
 });
+
+// ─── Restore on load (localStorage, sauf si hash URL présent) ────────────────
+
+if (!location.hash || location.hash.length < 2) {
+  loadFromStorage();
+}
